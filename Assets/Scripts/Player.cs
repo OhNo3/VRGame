@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Valve.VR;
 public class Player : MonoBehaviour
 {
-    //移動速度の調整とかはエディタから触ってね
+    public SteamVR_Input_Sources handTypeLeft;
+    public SteamVR_Input_Sources handTypeRight;
+    public SteamVR_Action_Boolean trig;
 
+    //移動速度の調整とかはエディタから触ってね
     [SerializeField]
     right rightHand;
     [SerializeField]
@@ -32,8 +35,6 @@ public class Player : MonoBehaviour
 
     float jumpTIme = 10;
     bool isJump = false;
-    public bool rTrig;
-    public bool lTrig;
 
     enum PlayerStatus
     {
@@ -57,6 +58,9 @@ public class Player : MonoBehaviour
         this.Move();
         this.Jump();
 
+        //コントローラーのトリガーの取得
+        if (trig.GetState(handTypeLeft)) { }
+        if (trig.GetState(handTypeRight)) { }
     }
 
 
