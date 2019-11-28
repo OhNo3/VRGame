@@ -10,9 +10,10 @@ public class Player : MonoBehaviour
 
     //移動速度の調整とかはエディタから触ってね
     [SerializeField]
-    right rightHand;
+    runHand rightHand;
     [SerializeField]
-    left leftHand;
+    runHand leftHand;
+
     [SerializeField]
     float cameraAcc = 1.0f;
     [SerializeField]
@@ -35,6 +36,8 @@ public class Player : MonoBehaviour
 
     float jumpTIme = 10;
     bool isJump = false;
+    bool Ldown = false;
+    bool Rdown = false;
 
     enum PlayerStatus
     {
@@ -51,18 +54,28 @@ public class Player : MonoBehaviour
         this.rigidbody = this.GetComponent<Rigidbody>();
     }
 
+    private void Start()
+    {
+        this.rightHand.SetIsVR(this.isVR);
+        this.leftHand.SetIsVR(this.isVR);
+    }
+
     private void Update()
     {
+        this.ControllerSet();
         this.StateChange();
         this.Rot();
         this.Move();
-        this.Jump();
-
-        //コントローラーのトリガーの取得
-        if (trig.GetState(handTypeLeft)) { }
-        if (trig.GetState(handTypeRight)) { }
+        this.JumpSet();
+        
     }
 
+    private void ControllerSet()
+    {
+        //コントローラーのトリガーの取得
+        this.Ldown = trig.GetState(handTypeLeft);
+        this.Rdown = trig.GetState(handTypeRight);
+    }
 
     void StateChange()
     {
@@ -72,20 +85,36 @@ public class Player : MonoBehaviour
         else if (this.rigidbody.velocity.y < -0.1f) { this.playerState = PlayerStatus.Fall; }
     }
 
-    void Jump()
+    void JumpSet()
     {
+        //ジャンプ中だったら滞空時間を加算してリターン
         if (this.isJump) { this.jumpTIme += Time.fixedDeltaTime; return; }
 
-        if (!Input.GetKeyDown(KeyCode.Space)) { return; }
-        this.rigidbody.AddForce(new Vector3(0, 100 * this.jumpValue, 0));
+        if (isVR)
+        {
+            var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
+            //Debug.Log(this.leftHand.moveDistance);
+            if (!this.Ldown || !this.Rdown || mov <= 0.1f) { return; }
+            this.Jump();
+        }
+        else
+        {
+            if (!Input.GetKeyDown(KeyCode.Space)) { return; }
+            this.Jump();
+        }
+    }
+
+    void Jump()
+    {
         this.isJump = true;
         this.jumpTIme = 0;
+        this.rigidbody.AddForce(new Vector3(0, 100 * this.jumpValue, 0));
     }
 
     void Move()
     {
-        var mov = Mathf.Abs(this.leftHand.move_distance) + Mathf.Abs(this.rightHand.move_distance);
-
+        var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
+        Debug.Log(mov);
         if (this.playerState == PlayerStatus.Idle || this.playerState == PlayerStatus.Move)
         {
             var forward = this.forwardObject.forward;
