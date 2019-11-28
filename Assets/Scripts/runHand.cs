@@ -2,12 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class right : MonoBehaviour
+public class runHand : MonoBehaviour
 {
-    [SerializeField]
-    bool vr = false;
+    public enum handType
+    {
+        left,
+        right
+    }
+
+    public handType hand;
+
+    bool isVR = false;
+    float moveDistance;
     Vector3 oldPosition;
-    public float move_distance = 1.0f;
 
     void Start()
     {
@@ -16,10 +23,11 @@ public class right : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!this.vr)
+        //VRじゃなかった場合マウスカーソルの移動量で加速度取得用のキューブを回転させる
+        if (!this.isVR)
         {
-            float mouse_x_delta = Input.GetAxis("Mouse X") * 0.1f;
-            float mouse_y_delta = Input.GetAxis("Mouse Y") * 0.1f;
+            float mouse_x_delta = Input.GetAxis("Mouse X") * 0.04f;
+            float mouse_y_delta = Input.GetAxis("Mouse Y") * 0.04f;
 
             var pos = this.transform.localPosition;
             pos.x = Mathf.Clamp(pos.x + mouse_x_delta, -0.5f, 0.5f);
@@ -35,8 +43,18 @@ public class right : MonoBehaviour
     void MoveValue()
     {
         var dif = this.transform.position - this.oldPosition;
-        this.move_distance = dif.magnitude;
+        this.moveDistance = dif.magnitude * 10;
 
         this.oldPosition = this.transform.position;
+    }
+
+    public float GetMoveDistance()
+    {
+        return this.moveDistance;
+    }
+
+    public void SetIsVR(bool b)
+    {
+        this.isVR = b;
     }
 }

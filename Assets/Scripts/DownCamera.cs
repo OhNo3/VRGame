@@ -13,7 +13,7 @@ public class DownCamera : MonoBehaviour
     private float countFlame;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         moveFlag = false;
     }

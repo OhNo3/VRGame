@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.misoten.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "C:\\Users\\nbcmi\\Desktop\\VR41_proto\\actions.json",
+      "action_manifest_path": "D:\\VR41_game\\actions.json",
       "strings": {
         "en_us": {
           "name": "Misoten [Testing]"
