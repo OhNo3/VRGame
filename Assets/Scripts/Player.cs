@@ -92,7 +92,7 @@ public class Player : MonoBehaviour
 
         if (isVR)
         {
-            var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
+            var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
             //Debug.Log(this.leftHand.moveDistance);
             if (!this.Ldown || !this.Rdown || mov <= 0.1f) { return; }
             this.Jump();
@@ -113,19 +113,19 @@ public class Player : MonoBehaviour
 
     void Move()
     {
-        var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
-        Debug.Log(mov);
+        var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
+        Debug.Log("mov" + mov);
         if (this.playerState == PlayerStatus.Idle || this.playerState == PlayerStatus.Move)
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 2;
+            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.5f;
         }
         else
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 1;
+            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.7f;
         }
     }
 
