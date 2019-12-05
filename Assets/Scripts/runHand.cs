@@ -13,12 +13,17 @@ public class runHand : MonoBehaviour
     public handType hand;
 
     bool isVR = false;
-    float moveDistance;
     Vector3 oldPosition;
+
+    public float moveDistance
+    {
+        get;
+        private set;
+    }
 
     void Start()
     {
-        this.oldPosition = this.transform.position;
+        this.oldPosition = this.transform.parent.localPosition;
     }
 
     void FixedUpdate()
@@ -29,11 +34,11 @@ public class runHand : MonoBehaviour
             float mouse_x_delta = Input.GetAxis("Mouse X") * 0.04f;
             float mouse_y_delta = Input.GetAxis("Mouse Y") * 0.04f;
 
-            var pos = this.transform.localPosition;
+            var pos = this.transform.parent.localPosition;
             pos.x = Mathf.Clamp(pos.x + mouse_x_delta, -0.5f, 0.5f);
             pos.y = Mathf.Clamp(pos.y + mouse_y_delta, -0.5f, 0.5f);
 
-            this.transform.localPosition = pos;
+            this.transform.parent.localPosition = pos;
         }
 
         //加速度を求める
@@ -42,15 +47,10 @@ public class runHand : MonoBehaviour
 
     void MoveValue()
     {
-        var dif = this.transform.position - this.oldPosition;
+        var dif = this.transform.parent.localPosition - this.oldPosition;
         this.moveDistance = dif.magnitude * 10;
 
-        this.oldPosition = this.transform.position;
-    }
-
-    public float GetMoveDistance()
-    {
-        return this.moveDistance;
+        this.oldPosition = this.transform.parent.localPosition;
     }
 
     public void SetIsVR(bool b)
