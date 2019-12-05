@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
     public SteamVR_Input_Sources handTypeLeft;
     public SteamVR_Input_Sources handTypeRight;
     public SteamVR_Action_Boolean trig;
+    public SteamVR_Action_Boolean stopButton;
 
     //移動速度の調整とかはエディタから触ってね
     [SerializeField]
@@ -20,6 +21,8 @@ public class Player : MonoBehaviour
     float moveSpeed = 1.0f;
     [SerializeField]
     float jumpValue = 1.0f;
+    [SerializeField]
+    private float limitVelocitySize;
 
     //VRの時、エディタからチェックいれてくれい
     [SerializeField]
@@ -92,7 +95,7 @@ public class Player : MonoBehaviour
 
         if (isVR)
         {
-            var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
+            var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
             //Debug.Log(this.leftHand.moveDistance);
             if (!this.Ldown || !this.Rdown || mov <= 0.1f) { return; }
             this.Jump();
@@ -113,20 +116,29 @@ public class Player : MonoBehaviour
 
     void Move()
     {
-        var mov = Mathf.Abs(this.leftHand.GetMoveDistance()) + Mathf.Abs(this.rightHand.GetMoveDistance());
-        Debug.Log(mov);
+        var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
+        //Debug.Log(mov);
         if (this.playerState == PlayerStatus.Idle || this.playerState == PlayerStatus.Move)
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 2;
+            //this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 2;
+
+            //　移動をリジッドを用いたものに
+            this.rigidbody.AddForce( forward * this.moveSpeed * Time.fixedDeltaTime * mov * 20);
+
         }
         else
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 1;
+            this.rigidbody.AddForce(forward * this.moveSpeed * Time.fixedDeltaTime * mov * 10);
         }
+
+        limitVelocityXZ();
+
+
+
     }
 
     void Rot()
@@ -160,6 +172,34 @@ public class Player : MonoBehaviour
         rot.y += X_Move * Time.fixedDeltaTime * this.cameraAcc * 10;
         this.cameraTransform.eulerAngles = rot;
     }
+
+    private void Stop()
+    {
+        rigidbody.velocity = Vector3.zero;
+
+    }
+
+    // 設定された加速度の丸め
+    private void limitVelocityXZ()
+    {
+        if (this.rigidbody.velocity.x <= limitVelocitySize || this.rigidbody.velocity.z <= limitVelocitySize)
+            return;
+
+        Vector3 _newVerocity = Vector3.zero;
+
+        //オーバーしすぎたサイズを抑える
+        float _oversize = this.rigidbody.velocity.x + this.rigidbody.velocity.z;
+        _oversize -= limitVelocitySize;
+        //比率　x/z
+        float _oversizeRatio = this.rigidbody.velocity.x / this.rigidbody.velocity.z;
+
+        _newVerocity.x = this.rigidbody.velocity.x - _oversize * _oversizeRatio;
+        _newVerocity.z = this.rigidbody.velocity.z - (_oversize - _oversize * _oversizeRatio);
+        _newVerocity.y = this.rigidbody.velocity.y;
+
+        this.rigidbody.velocity = _newVerocity;
+    }
+
 
     private void OnCollisionEnter(Collision collision)
     {
