@@ -26,13 +26,14 @@ public class runHand : MonoBehaviour
         this.oldPosition = this.transform.parent.localPosition;
     }
 
-    void FixedUpdate()
+    void Update()
     {
+        float delta = Time.deltaTime;
         //VRじゃなかった場合マウスカーソルの移動量で加速度取得用のキューブを回転させる
         if (!this.isVR)
         {
-            float mouse_x_delta = Input.GetAxis("Mouse X") * 0.04f;
-            float mouse_y_delta = Input.GetAxis("Mouse Y") * 0.04f;
+            float mouse_x_delta = Input.GetAxis("Mouse X") * 0.04f * delta;
+            float mouse_y_delta = Input.GetAxis("Mouse Y") * 0.04f * delta;
 
             var pos = this.transform.parent.localPosition;
             pos.x = Mathf.Clamp(pos.x + mouse_x_delta, -0.5f, 0.5f);

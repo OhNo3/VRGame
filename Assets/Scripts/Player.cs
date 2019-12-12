@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
+
 public class Player : MonoBehaviour
 {
     public SteamVR_Input_Sources handTypeLeft;
     public SteamVR_Input_Sources handTypeRight;
     public SteamVR_Action_Boolean trig;
+    public SteamVR_Action_Boolean grip;
 
     //移動速度の調整とかはエディタから触ってね
     [SerializeField]
-    runHand rightHand;
+    runHand csLeftHand;
     [SerializeField]
-    runHand leftHand;
+    runHand csRightHand;
 
     [SerializeField]
     float cameraAcc = 1.0f;
@@ -20,6 +22,8 @@ public class Player : MonoBehaviour
     float moveSpeed = 1.0f;
     [SerializeField]
     float jumpValue = 1.0f;
+    [SerializeField]
+    private float limitVelocitySize;
 
     //VRの時、エディタからチェックいれてくれい
     [SerializeField]
@@ -30,7 +34,6 @@ public class Player : MonoBehaviour
     Transform cameraTransform;
     [SerializeField]
     Transform forwardObject;
-
     [SerializeField]
     DownCamera DownCameraScript;
 
@@ -38,6 +41,8 @@ public class Player : MonoBehaviour
     bool isJump = false;
     bool Ldown = false;
     bool Rdown = false;
+    bool Lbrake = false;
+    bool Rbrake = false;
 
     enum PlayerStatus
     {
@@ -56,8 +61,8 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        this.rightHand.SetIsVR(this.isVR);
-        this.leftHand.SetIsVR(this.isVR);
+        this.csLeftHand.SetIsVR(this.isVR);
+        this.csRightHand.SetIsVR(this.isVR);
     }
 
     private void Update()
@@ -75,6 +80,8 @@ public class Player : MonoBehaviour
         //コントローラーのトリガーの取得
         this.Ldown = trig.GetState(handTypeLeft);
         this.Rdown = trig.GetState(handTypeRight);
+        this.Lbrake = grip.GetState(handTypeLeft);
+        this.Rbrake = grip.GetState(handTypeRight);
     }
 
     void StateChange()
@@ -92,7 +99,7 @@ public class Player : MonoBehaviour
 
         if (isVR)
         {
-            var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
+            var mov = Mathf.Abs(this.csLeftHand.moveDistance) + Mathf.Abs(this.csRightHand.moveDistance);
             //Debug.Log(this.leftHand.moveDistance);
             if (!this.Ldown || !this.Rdown || mov <= 0.1f) { return; }
             this.Jump();
@@ -113,20 +120,38 @@ public class Player : MonoBehaviour
 
     void Move()
     {
-        var mov = Mathf.Abs(this.leftHand.moveDistance) + Mathf.Abs(this.rightHand.moveDistance);
-        Debug.Log("mov" + mov);
+        var mov = Mathf.Abs(this.csLeftHand.moveDistance) + Mathf.Abs(this.csRightHand.moveDistance);
         if (this.playerState == PlayerStatus.Idle || this.playerState == PlayerStatus.Move)
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.5f;
+            Debug.Log("mov" + mov);
+            //if (this.isVR)
+            //{
+            //    this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.7f * 10;
+            //}
+            //else
+            //{
+            //    this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.5f;
+            //}
+            //　移動をリジッドを用いたものに
+            this.rigidbody.AddForce(forward * this.moveSpeed * Time.fixedDeltaTime * mov * 20);
         }
         else
         {
             var forward = this.forwardObject.forward;
             forward.y = 0;
-            this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.7f;
+            //if (this.isVR)
+            //{
+            //    this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.7f * 10;
+            //}
+            //else
+            //{
+            //    this.transform.position += forward * this.moveSpeed * Time.fixedDeltaTime * mov * 0.7f;
+            //}
+            this.rigidbody.AddForce(forward * this.moveSpeed * Time.fixedDeltaTime * mov * 10);
         }
+        limitVelocityXZ();
     }
 
     void Rot()
@@ -159,6 +184,33 @@ public class Player : MonoBehaviour
         rot.x += -Y_Move * Time.fixedDeltaTime * this.cameraAcc * 10;
         rot.y += X_Move * Time.fixedDeltaTime * this.cameraAcc * 10;
         this.cameraTransform.eulerAngles = rot;
+    }
+
+    private void Stop()
+    {
+        rigidbody.velocity = Vector3.zero;
+    }
+
+    // 設定された加速度の丸め
+    private void limitVelocityXZ()
+    {
+        if (this.rigidbody.velocity.x <= limitVelocitySize || this.rigidbody.velocity.z <= limitVelocitySize)
+            return;
+
+        Vector3 _newVerocity = Vector3.zero;
+
+        //オーバーしすぎたサイズを抑える
+        float _oversize = this.rigidbody.velocity.x + this.rigidbody.velocity.z;
+        _oversize -= limitVelocitySize;
+
+        //比率　x/z
+        float _oversizeRatio = this.rigidbody.velocity.x / this.rigidbody.velocity.z;
+
+        _newVerocity.x = this.rigidbody.velocity.x - _oversize * _oversizeRatio;
+        _newVerocity.z = this.rigidbody.velocity.z - (_oversize - _oversize * _oversizeRatio);
+        _newVerocity.y = this.rigidbody.velocity.y;
+
+        this.rigidbody.velocity = _newVerocity;
     }
 
     private void OnCollisionEnter(Collision collision)
