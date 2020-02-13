@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/Kakinuma.meta
 guid: 1b4980345b38efa458a808e40b82d586
+=======
+guid: 635f94f2279867643945ce7fecf997d9
+>>>>>>> 3b7110c6a4f77dfa0634d89aee35a0c4e45d2155:Assets/Kakinuma.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
