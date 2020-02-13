@@ -16,6 +16,8 @@ public class DownCamera : MonoBehaviour
     void Awake()
     {
         moveFlag = false;
+        PosY = 0.01f;
+
     }
 
     // Update is called once per frame
